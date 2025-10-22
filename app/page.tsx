@@ -156,6 +156,89 @@ export default function App() {
 
 
   const isGenerating = isGeneratingStory || isGeneratingStoryboard;
+  const allImagesLoaded = storyboard.length > 0 && storyboard.every(scene => !scene.imageIsLoading);;
+  const handleDownloadZip = async () => {
+    const { JSZip } = (window as any);
+    if (!JSZip) {
+      setError("Image download failed: JSZip library not found.");
+      console.error("JSZip library not found on window object.");
+      return;
+    }
+
+    const scenesWithImages = storyboard.filter(s => s.imageUrl && s.imageUrl !== 'error');
+    if (scenesWithImages.length === 0) {
+      setError("No images available to download.");
+      return;
+    }
+
+    const button = document.getElementById('download-zip-btn');
+    const originalText = button?.textContent;
+    if (button) button.textContent = 'Zipping...';
+
+    try {
+      const zip = new JSZip();
+
+      const imagePromises = scenesWithImages.map(async (scene, index) => {
+        const response = await fetch(scene.imageUrl!);
+        const blob = await response.blob();
+        zip.file(`${scene.id}.jpg`, blob);
+      });
+
+      await Promise.all(imagePromises);
+
+      const content = await zip.generateAsync({ type: 'blob' });
+
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'storyboard-images.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Failed to create zip file", e);
+      setError(e instanceof Error ? `Failed to create zip file: ${e.message}` : 'An unknown error occurred during zipping.');
+    } finally {
+      if (button && originalText) button.textContent = originalText;
+    }
+  };
+  const handleDownloadSrt = () => {
+    if (storyboard.length === 0) return;
+
+    const formatTime = (totalSeconds: number) => {
+      const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+      const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+      const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+      const milliseconds = '000';
+      return `${hours}:${minutes}:${seconds},${milliseconds}`;
+    };
+
+    let srtContent = '';
+    let currentTime = 0;
+    const DURATION_PER_SCENE = 5; // seconds
+
+    storyboard.forEach((scene, index) => {
+      const startTime = currentTime;
+      const endTime = currentTime + DURATION_PER_SCENE;
+
+      srtContent += `${index + 1}\n`;
+      srtContent += `${formatTime(startTime)} --> ${formatTime(endTime)}\n`;
+      srtContent += `${scene.caption}\n\n`;
+
+      currentTime = endTime;
+    });
+
+    const blob = new Blob([srtContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'storyboard.srt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-brand-bg text-brand-on-bg font-sans p-4 sm:p-8">
@@ -191,6 +274,23 @@ export default function App() {
           {characters.length > 0 && (
             <div className="my-8">
               <h2 className="text-2xl font-bold text-brand-secondary mb-4">Main Characters</h2>
+              {allImagesLoaded && (
+                <div className="flex gap-2">
+                  <button
+                    id="download-zip-btn"
+                    onClick={handleDownloadZip}
+                    className="bg-brand-surface border border-brand-secondary text-brand-secondary font-bold py-2 px-3 rounded-md hover:bg-brand-secondary hover:text-brand-bg disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-200 text-sm"
+                  >
+                    Download Images (.zip)
+                  </button>
+                  <button
+                    onClick={handleDownloadSrt}
+                    className="bg-brand-surface border border-brand-secondary text-brand-secondary font-bold py-2 px-3 rounded-md hover:bg-brand-secondary hover:text-brand-bg disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-200 text-sm"
+                  >
+                    Download Captions (.srt)
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {characters.map((char, index) => (
                   <div key={index} className="bg-brand-surface p-4 rounded-lg border border-gray-700">
