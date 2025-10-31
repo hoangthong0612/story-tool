@@ -158,12 +158,12 @@ export default function App() {
   const isGenerating = isGeneratingStory || isGeneratingStoryboard;
   const allImagesLoaded = storyboard.length > 0 && storyboard.every(scene => !scene.imageIsLoading);;
   const handleDownloadZip = async () => {
-    const { JSZip } = (window as any);
-    if (!JSZip) {
-      setError("Image download failed: JSZip library not found.");
-      console.error("JSZip library not found on window object.");
-      return;
-    }
+    // const { JSZip } = (window as any);
+    // if (!JSZip) {
+    //   setError("Image download failed: JSZip library not found.");
+    //   console.error("JSZip library not found on window object.");
+    //   return;
+    // }
 
     const scenesWithImages = storyboard.filter(s => s.imageUrl && s.imageUrl !== 'error');
     if (scenesWithImages.length === 0) {
@@ -216,7 +216,7 @@ export default function App() {
 
     let srtContent = '';
     let currentTime = 0;
-    const DURATION_PER_SCENE = 5; // seconds
+    const DURATION_PER_SCENE = 10; // seconds
 
     storyboard.forEach((scene, index) => {
       const startTime = currentTime;
@@ -310,8 +310,11 @@ export default function App() {
                 <div>Image Prompt</div>
                 <div>Illustration</div>
               </div>
-              {storyboard.map((scene) => (
-                <div key={scene.id} className="grid lg:grid-cols-3 gap-6 p-4 border-b border-gray-800 items-start">
+              {storyboard.map((scene, index) => (
+                <div key={scene.id} className="grid lg:grid-cols-4 gap-6 p-4 border-b border-gray-800 items-start">
+                  <div className="lg:pr-4">
+                    <p className="text-brand-on-bg/90 italic">"{index}"</p>
+                  </div>
                   <div className="lg:pr-4">
                     <h3 className="lg:hidden font-bold text-brand-secondary mb-2">Caption</h3>
                     <p className="text-brand-on-bg/90 italic">"{scene.caption}"</p>

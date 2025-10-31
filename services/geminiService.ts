@@ -37,7 +37,7 @@ const storyboardSchema = {
         properties: {
           caption: {
             type: Type.STRING,
-            description: "A sequential and verbatim segment of the story, under 200 characters. Each caption must be an exact substring from the original text. All captions, when concatenated, should perfectly reconstruct the full story in its original order."
+            description: "A sequential and verbatim segment of the story, under 20 words. Each caption must be an exact substring from the original text. All captions, when concatenated, should perfectly reconstruct the full story in its original order."
           },
           imagePrompt: {
             type: Type.STRING,
@@ -52,7 +52,7 @@ const storyboardSchema = {
 };
 
 export const generateStoryStream = async (idea: string, onChunk: (chunk: string) => void): Promise<string> => {
-  const prompt = `You are an inspiring storyteller. Write a full, complete, and emotionally resonant story of at least 2500 words based on the following idea: "${idea}". The story must follow a clear arc: starting with challenges and struggles, moving through a process of effort and learning, and culminating in success and triumph. Weave in a relevant and inspiring quote from a famous person naturally into the narrative. The tone should be cinematic, warm, deep, and heartfelt.`;
+  const prompt = `You are an inspiring storyteller. Write a full, complete, and emotionally resonant story of at least 1250 words based on the following idea: "${idea}". The story must follow a clear arc: starting with challenges and struggles, moving through a process of effort and learning, and culminating in success and triumph. Weave in a relevant and inspiring quote from a famous person naturally into the narrative. The tone should be cinematic, warm, deep, and heartfelt.`;
 
   const response = await ai.models.generateContentStream({
     model: STORYBOARD_GENERATION_MODEL,
@@ -80,7 +80,7 @@ Follow these strict rules for generating the JSON output:
     - Each caption MUST be a direct, verbatim quote from the story. DO NOT paraphrase, summarize, or change any words.
     - The captions must be in the exact same order as they appear in the story.
     - When all captions are joined together, they must form the complete, original story text without any gaps or missing parts.
-    - Split the story into captions at natural breaks (like the end of a sentence or a significant clause) to create scenes. Keep each caption under 200 characters.
+    - Split the story into captions at natural breaks (like the end of a sentence or a significant clause) to create scenes. Keep each caption under 20 words.
 4.  **Image Prompts**: For each caption, create a corresponding descriptive prompt for an image generator that visually represents that specific part of the story. Do not include style information in the prompt.
 
 Do not include any text outside the final JSON object.
